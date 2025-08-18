@@ -13,7 +13,7 @@ namespace Library_Management_Domain.Entities
         public string? Title { get; set; } = default!;
         public string? ISBN { get; set; } = default!;
         public string? Description { get; set; } = default!;
-        public string? Genre { get;set; } = default!;
+        public string? Genre { get; set; } = default!;
         public DateTime? PublishedDate { get; set; } = default!;
 
     }

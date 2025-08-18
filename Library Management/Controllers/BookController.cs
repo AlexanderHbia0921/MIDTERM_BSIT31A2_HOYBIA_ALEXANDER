@@ -11,18 +11,31 @@ namespace Library_Management.Controllers
             return View(books);
         }
 
-        public IActionResult Add()
+        public IActionResult AddModal()
         {
-            return View();
+            return PartialView("_AddBookPartial");
         }
 
-     
+        [HttpPost]
+        public IActionResult Add(AddBookViewModel vm)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("AddModal", vm); // Re-render the modal with validation errors
+            }
+
+            BookService.Instance.AddBook(vm);
+
+            return RedirectToAction("Index");
+        }
+
+
         public IActionResult EditModal(Guid id)
         {
             var editBookViewModel = BookService.Instance.GetBookById(id);
-            if (editBookViewModel == null) return NotFound();
+            if (editBookViewModel == null)
+                return NotFound();
 
-          
             return PartialView("_EditBookPartial", editBookViewModel);
         }
 
@@ -31,36 +44,66 @@ namespace Library_Management.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // If model state is not valid, you can return a view with validation errors
                 return BadRequest(ModelState);
             }
 
-            // Assuming BookService has a method to update the book
             BookService.Instance.UpdateBook(vm);
-
             return Ok();
         }
 
+        // DeleteModal and Delete
         public IActionResult DeleteModal(Guid id)
         {
-            
-            return PartialView("_DeletePartial");
+            var book = BookService.Instance.GetBookById(id);
+            if (book == null)
+                return NotFound();
+
+            return PartialView("_DeleteBookPartial", book); // updated partial name
         }
 
-        [HttpDelete]
+        [HttpPost]
         public IActionResult Delete(Guid id)
         {
-            // Assuming BookService has a method to delete the book
+            var book = BookService.Instance.GetBookById(id);
+            if (book == null)
+                return NotFound();
+
             BookService.Instance.DeleteBook(id);
-            return Ok();
+            return Ok(); // You can return a redirect if not using AJAX
         }
 
         public IActionResult Details(Guid id)
         {
-            var book = BookService.Instance.GetBooks().First(b => b.BookId == id);
+            var book = BookService.Instance.GetBooks().FirstOrDefault(b => b.BookId == id);
+            if (book == null)
+                return NotFound();
+
             return View(book);
         }
+        private readonly BookService _bookService = BookService.Instance;
+        // Show the Add Copy form
+        [HttpGet]
+        public IActionResult AddCopy(Guid bookId)
+        {
+            var vm = new AddCopyViewModel
+            {
+                BookId = bookId
+            };
+            return View(vm);
+        }
 
+        // Handle form submission
+        [HttpPost]
+        public IActionResult AddCopy(AddCopyViewModel vm)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(vm);
+            }
+
+            _bookService.AddBookCopy(vm);
+            return RedirectToAction("Details", new { id = vm.BookId }); // Redirect to book details
+        }
 
     }
 }
