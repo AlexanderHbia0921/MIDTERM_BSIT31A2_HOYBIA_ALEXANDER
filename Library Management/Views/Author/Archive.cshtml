@@ -1,0 +1,116 @@
+@model IEnumerable<Library_Management.Models.AuthorListViewModel>
+@{
+    ViewData["Title"] = "Archived Authors";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Author")">Authors</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Archived</li>
+                </ol>
+            </nav>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-archive"></i> Archived Authors</h2>
+                <a href="@Url.Action("Index", "Author")" class="btn btn-primary">
+                    <i class="bi bi-arrow-left"></i> Back to Active Authors
+                </a>
+            </div>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="row">
+                            @foreach (var author in Model)
+                            {
+                                <div class="col-lg-4 col-md-6 mb-4">
+                                    <div class="card h-100 border-warning">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-3">
+                                                @if (!string.IsNullOrEmpty(author.ProfileImageUrl))
+                                                {
+                                                    <img src="@author.ProfileImageUrl" alt="@author.Name" class="rounded-circle me-3 opacity-75" width="60" height="60" style="object-fit: cover;">
+                                                }
+                                                else
+                                                {
+                                                    <div class="bg-warning rounded-circle me-3 d-flex align-items-center justify-content-center opacity-75" style="width: 60px; height: 60px;">
+                                                        <i class="bi bi-person-fill text-white fs-3"></i>
+                                                    </div>
+                                                }
+                                                <div>
+                                                    <h5 class="card-title mb-1 text-muted">@author.Name</h5>
+                                                    <small class="text-muted">@author.BookCount book(s)</small>
+                                                    <br>
+                                                    <span class="badge bg-warning mt-1">
+                                                        <i class="bi bi-archive"></i> Archived
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            @if (!string.IsNullOrEmpty(author.Biography))
+                                            {
+                                                <p class="card-text text-muted">
+                                                    @(author.Biography.Length > 100 ? author.Biography.Substring(0, 100) + "..." : author.Biography)
+                                                </p>
+                                            }
+
+                                            @if (author.BirthDate.HasValue)
+                                            {
+                                                <p class="text-muted small mb-3">
+                                                    <i class="bi bi-calendar3"></i> Born: @author.BirthDate.Value.ToString("MMMM dd, yyyy")
+                                                </p>
+                                            }
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <div class="btn-group w-100" role="group">
+                                                <a href="@Url.Action("Details", "Author", new { id = author.Id })" class="btn btn-outline-secondary btn-sm">
+                                                    <i class="bi bi-eye"></i> View Details
+                                                </a>
+                                                <form method="post" asp-action="Restore" asp-controller="Author" asp-route-id="@author.Id" class="d-inline">
+                                                    <button type="submit" class="btn btn-outline-success btn-sm">
+                                                        <i class="bi bi-arrow-clockwise"></i> Restore
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-archive fs-1 text-muted"></i>
+                            <h4 class="text-muted mt-3">No Archived Authors</h4>
+                            <p class="text-muted">No authors have been archived yet.</p>
+                            <a href="@Url.Action("Index", "Author")" class="btn btn-primary">
+                                <i class="bi bi-arrow-left"></i> Go to Active Authors
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

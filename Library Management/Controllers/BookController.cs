@@ -78,6 +78,9 @@ namespace Library_Management.Controllers
             if (book == null)
                 return NotFound();
 
+            // Get all book copies for this book
+            ViewBag.BookCopies = BookService.Instance.GetBookCopiesByBookId(id);
+            
             return View(book);
         }
         private readonly BookService _bookService = BookService.Instance;
@@ -103,6 +106,78 @@ namespace Library_Management.Controllers
 
             _bookService.AddBookCopy(vm);
             return RedirectToAction("Details", new { id = vm.BookId }); // Redirect to book details
+        }
+
+        [HttpGet]
+        public IActionResult PulloutModal(Guid copyId)
+        {
+            var bookCopies = BookService.Instance.GetBookCopiesByBookId(Guid.Empty); // We need to find the copy first
+            var bookCopy = _bookService.GetAllBookCopies().FirstOrDefault(bc => bc.Id == copyId);
+            if (bookCopy == null)
+                return NotFound();
+
+            var model = new PulloutBookCopyViewModel
+            {
+                BookCopyId = copyId,
+                BookTitle = bookCopy.Book?.Title,
+                CoverImageUrl = bookCopy.CoverImageUrl,
+                Condition = bookCopy.Condition
+            };
+
+            return PartialView("_PulloutBookCopyPartial", model);
+        }
+
+        [HttpPost]
+        public IActionResult PulloutCopy(PulloutBookCopyViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            _bookService.PulloutBookCopy(model.BookCopyId, model.PulloutReason);
+            TempData["Success"] = "Book copy pulled out successfully!";
+            return Ok();
+        }
+
+        // Archive book
+        [HttpPost]
+        public IActionResult Archive(Guid id)
+        {
+            try
+            {
+                _bookService.ArchiveBook(id);
+                TempData["Success"] = "Book archived successfully!";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        // Restore book
+        [HttpPost]
+        public IActionResult Restore(Guid id)
+        {
+            try
+            {
+                _bookService.RestoreBook(id);
+                TempData["Success"] = "Book restored successfully!";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
+            return RedirectToAction("Archive");
+        }
+
+        public IActionResult Archive()
+        {
+            var archivedBooks = _bookService.GetArchivedBooks();
+            return View(archivedBooks);
         }
 
     }

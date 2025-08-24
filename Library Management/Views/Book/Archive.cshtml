@@ -1,0 +1,102 @@
+@model IEnumerable<Library_Management.Models.BookListViewModel>
+@{
+    ViewData["Title"] = "Archived Books";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Book")">Books</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Archived</li>
+                </ol>
+            </nav>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-archive"></i> Archived Books</h2>
+                <a href="@Url.Action("Index", "Book")" class="btn btn-primary">
+                    <i class="bi bi-arrow-left"></i> Back to Active Books
+                </a>
+            </div>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="row">
+                            @foreach (var book in Model)
+                            {
+                                <div class="col-xxl-2 col-xl-3 col-lg-4 col-md-6 mb-4">
+                                    <div class="card h-100 border-warning">
+                                        @if (!string.IsNullOrEmpty(book.CoverImageUrl))
+                                        {
+                                            <img src="@book.CoverImageUrl" class="card-img-top opacity-75" alt="@book.Title" style="height: 200px; object-fit: cover;">
+                                        }
+                                        else
+                                        {
+                                            <div class="bg-warning bg-opacity-25 d-flex align-items-center justify-content-center" style="height: 200px;">
+                                                <i class="bi bi-book fs-1 text-muted"></i>
+                                            </div>
+                                        }
+                                        <div class="card-body d-flex flex-column">
+                                            <h6 class="card-title text-muted">@book.Title</h6>
+                                            <p class="card-text small text-muted flex-grow-1">
+                                                <strong>Author:</strong> @book.AuthorName<br>
+                                                <strong>Genre:</strong> @book.Genre<br>
+                                                <strong>ISBN:</strong> @book.ISBN
+                                            </p>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <small class="text-muted">@book.TotalCopies copy(s)</small>
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-archive"></i> Archived
+                                                </span>
+                                            </div>
+                                            <div class="btn-group w-100" role="group">
+                                                <a href="@Url.Action("Details", "Book", new { id = book.BookId })" class="btn btn-outline-secondary btn-sm">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                                <form method="post" asp-action="Restore" asp-controller="Book" asp-route-id="@book.BookId" class="d-inline flex-fill">
+                                                    <button type="submit" class="btn btn-outline-success btn-sm w-100">
+                                                        <i class="bi bi-arrow-clockwise"></i> Restore
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-archive fs-1 text-muted"></i>
+                            <h4 class="text-muted mt-3">No Archived Books</h4>
+                            <p class="text-muted">No books have been archived yet.</p>
+                            <a href="@Url.Action("Index", "Book")" class="btn btn-primary">
+                                <i class="bi bi-arrow-left"></i> Go to Active Books
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -46,7 +46,68 @@
             <hr />
 
             <h6 class="fw-semibold">@Html.DisplayNameFor(m => m.Description)</h6>
-            <p class="mb-0">@Model.Description</p>
+            <p class="mb-3">@Model.Description</p>
+
+            <!-- Book Copies Section -->
+            <h6 class="fw-semibold">Book Copies</h6>
+            @if (ViewBag.BookCopies != null && ((IEnumerable<Library_Management_Domain.Entities.BookCopy>)ViewBag.BookCopies).Any())
+            {
+                <div class="row">
+                    @foreach (var copy in (IEnumerable<Library_Management_Domain.Entities.BookCopy>)ViewBag.BookCopies)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100 @(copy.PulloutDate.HasValue ? "border-warning" : "border-success")">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar-plus"></i> Added: @copy.AddedDate?.ToString("MMM dd, yyyy")
+                                        </small>
+                                        @if (copy.PulloutDate.HasValue)
+                                        {
+                                            <span class="badge bg-warning">
+                                                <i class="bi bi-box-arrow-down"></i> Pulled Out
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle"></i> Available
+                                            </span>
+                                        }
+                                    </div>
+                                    
+                                    <p class="small mb-2">
+                                        <strong>Condition:</strong> @copy.Condition<br>
+                                        <strong>Source:</strong> @copy.Source
+                                    </p>
+                                    
+                                    @if (copy.PulloutDate.HasValue)
+                                    {
+                                        <div class="bg-warning bg-opacity-10 p-2 rounded mb-2">
+                                            <small class="text-warning">
+                                                <i class="bi bi-calendar-x"></i> <strong>Pulled out:</strong> @copy.PulloutDate?.ToString("MMM dd, yyyy")<br>
+                                                <i class="bi bi-info-circle"></i> <strong>Reason:</strong> @copy.PulloutReason
+                                            </small>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-warning btn-sm w-100 pullout-copy-btn" data-copy-id="@copy.Id">
+                                            <i class="bi bi-box-arrow-down"></i> Pull Out
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No copies of this book are currently available.
+                </div>
+            }
         </div>
     </div>
 </div>
@@ -99,6 +160,21 @@
     </div>
 </div>
 
+<!-- Pullout Modal -->
+<div class="modal fade" id="pulloutModal" tabindex="-1" aria-labelledby="pulloutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pulloutModalLabel">Pull Out Book Copy</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="pulloutModalBody">
+              
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         function goBackOrRedirect() {
@@ -108,5 +184,18 @@
                 window.location.href = '@Url.Action("Index", "Book")';
             }
         }
+
+        $(document).ready(function() {
+            // Handle pullout copy button click
+            $('.pullout-copy-btn').click(function() {
+                var copyId = $(this).data('copy-id');
+                $.get('@Url.Action("PulloutModal", "Book")', { copyId: copyId }, function(data) {
+                    $('#pulloutModalBody').html(data);
+                    $('#pulloutModal').modal('show');
+                }).fail(function() {
+                    alert('Error loading pullout form. Please try again.');
+                });
+            });
+        });
     </script>
 }

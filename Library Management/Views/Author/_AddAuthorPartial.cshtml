@@ -1,0 +1,71 @@
+@model Library_Management.Models.AddAuthorViewModel
+
+<form id="addAuthorForm" method="post" asp-action="AddModal" asp-controller="Author">
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label">Name *</label>
+        <input asp-for="Name" class="form-control" placeholder="Enter Author's full name">
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Biography" class="form-label">Biography</label>
+        <textarea asp-for="Biography" class="form-control" rows="4" placeholder="Biography of the author"></textarea>
+        <span asp-validation-for="Biography" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="BirthDate" class="form-label">Birth Date</label>
+        <input asp-for="BirthDate" class="form-control" type="date">
+        <span asp-validation-for="BirthDate" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ProfileImageUrl" class="form-label">Profile Image URL</label>
+        <input asp-for="ProfileImageUrl" class="form-control" placeholder="https://example.com/author-photo.jpg">
+        <span asp-validation-for="ProfileImageUrl" class="text-danger"></span>
+        <div class="form-text">Provide a URL to the author's profile image (optional).</div>
+    </div>
+
+    <div class="modal-footer px-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Author
+        </button>
+    </div>
+</form>
+
+<script>
+    $(document).ready(function() {
+        $('#addAuthorForm').submit(function(e) {
+            e.preventDefault();
+            
+            $.post($(this).attr('action'), $(this).serialize())
+                .done(function() {
+                    $('#addAuthorModal').modal('hide');
+                    location.reload();
+                })
+                .fail(function(xhr) {
+                    if (xhr.status === 400) {
+                        // Validation errors - reload the form with errors
+                        $('#addAuthorModalBody').html(xhr.responseText);
+                    } else {
+                        alert('Error adding author. Please try again.');
+                    }
+                });
+        });
+
+        // Preview profile image
+        $('input[name="ProfileImageUrl"]').on('change', function() {
+            var url = $(this).val();
+            if (url && url.match(/\.(jpeg|jpg|gif|png)$/)) {
+                if ($('#profilePreview').length === 0) {
+                    $(this).after('<div id="profilePreview" class="mt-2"><img src="' + url + '" alt="Profile Preview" class="rounded-circle" width="80" height="80" style="object-fit: cover;"></div>');
+                } else {
+                    $('#profilePreview img').attr('src', url);
+                }
+            } else {
+                $('#profilePreview').remove();
+            }
+        });
+    });
+</script>

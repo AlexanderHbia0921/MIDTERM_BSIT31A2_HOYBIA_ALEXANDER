@@ -1,0 +1,187 @@
+@model Library_Management.Models.AuthorDetailsViewModel
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Author")">Authors</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+                </ol>
+            </nav>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <div class="row">
+                <!-- Author Profile Card -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            @if (!string.IsNullOrEmpty(Model.ProfileImageUrl))
+                            {
+                                <img src="@Model.ProfileImageUrl" alt="@Model.Name" class="rounded-circle mb-3" width="150" height="150" style="object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="bg-secondary rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
+                                    <i class="bi bi-person-fill text-white" style="font-size: 4rem;"></i>
+                                </div>
+                            }
+
+                            <h3 class="card-title">@Model.Name</h3>
+                            
+                            @if (Model.BirthDate.HasValue)
+                            {
+                                <p class="text-muted">
+                                    <i class="bi bi-calendar3"></i> Born: @Model.BirthDate.Value.ToString("MMMM dd, yyyy")
+                                </p>
+                            }
+
+                            <p class="text-muted mb-3">
+                                <i class="bi bi-book"></i> @Model.Books.Count book(s) in library
+                            </p>
+
+                            @if (Model.IsArchived)
+                            {
+                                <span class="badge bg-warning mb-3">
+                                    <i class="bi bi-archive"></i> Archived
+                                </span>
+                            }
+
+                            <div class="d-grid gap-2">
+                                <a href="@Url.Action("Edit", "Author", new { id = Model.Id })" class="btn btn-primary">
+                                    <i class="bi bi-pencil"></i> Edit Author
+                                </a>
+                                @if (!Model.IsArchived)
+                                {
+                                    <button type="button" class="btn btn-warning archive-author-btn" data-id="@Model.Id">
+                                        <i class="bi bi-archive"></i> Archive Author
+                                    </button>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-action="Restore" asp-controller="Author" asp-route-id="@Model.Id">
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i class="bi bi-arrow-clockwise"></i> Restore Author
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Biography))
+                    {
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5><i class="bi bi-person-lines-fill"></i> Biography</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">@Model.Biography</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Books by Author -->
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5><i class="bi bi-book-half"></i> Books by @Model.Name</h5>
+                            @if (Model.Books.Any())
+                            {
+                                <span class="badge bg-primary">@Model.Books.Count book(s)</span>
+                            }
+                        </div>
+                        <div class="card-body">
+                            @if (Model.Books.Any())
+                            {
+                                <div class="row">
+                                    @foreach (var book in Model.Books)
+                                    {
+                                        <div class="col-md-6 col-lg-4 mb-4">
+                                            <div class="card h-100">
+                                                @if (!string.IsNullOrEmpty(book.CoverImageUrl))
+                                                {
+                                                    <img src="@book.CoverImageUrl" class="card-img-top" alt="@book.Title" style="height: 200px; object-fit: cover;">
+                                                }
+                                                else
+                                                {
+                                                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                                        <i class="bi bi-book fs-1 text-muted"></i>
+                                                    </div>
+                                                }
+                                                <div class="card-body">
+                                                    <h6 class="card-title">@book.Title</h6>
+                                                    <p class="card-text small text-muted">
+                                                        <strong>ISBN:</strong> @book.ISBN<br>
+                                                        <strong>Genre:</strong> @book.Genre<br>
+                                                        @if (book.PublishedDate.HasValue)
+                                                        {
+                                                            <strong>Published:</strong> @book.PublishedDate.Value.Year<br>
+                                                        }
+                                                    </p>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <small class="text-muted">
+                                                            @book.AvailableCopies/@book.TotalCopies available
+                                                        </small>
+                                                        <a href="@Url.Action("Details", "Book", new { id = book.BookId })" class="btn btn-outline-primary btn-sm">
+                                                            View Details
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-5">
+                                    <i class="bi bi-book fs-1 text-muted"></i>
+                                    <h5 class="text-muted mt-3">No Books Found</h5>
+                                    <p class="text-muted">This author doesn't have any books in the library yet.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Archive Author
+            $('.archive-author-btn').click(function() {
+                var authorId = $(this).data('id');
+                if (confirm('Are you sure you want to archive this author? This will also archive all their books.')) {
+                    $.post('@Url.Action("Archive", "Author")', { id: authorId }, function() {
+                        location.reload();
+                    }).fail(function() {
+                        alert('Error archiving author. Please try again.');
+                    });
+                }
+            });
+        });
+    </script>
+}

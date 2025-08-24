@@ -4,7 +4,30 @@
     ViewData["Title"] = "Books";
 }
 
-<h1 class="mb-4 fw-bold">📕Book Library</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="fw-bold mb-0">📕 Book Library</h1>
+    <div>
+        <a href="@Url.Action("Archive", "Book")" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-archive"></i> View Archived Books
+        </a>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4">
     <div class="col">
@@ -30,6 +53,13 @@
 
                     <a asp-action="Details" asp-route-id="@book.BookId" class="action-btn" title="Details">
                         <i class="bi bi-eye"></i>
+                    </a>
+
+                    <a href="javascript:void(0);"
+                       class="action-btn"
+                       title="Archive"
+                       onclick="archiveBook('@book.BookId')">
+                        <i class="bi bi-archive"></i>
                     </a>
 
                     <a href="javascript:void(0);"
@@ -103,6 +133,27 @@
                 .catch(error => {
                     alert('Error loading Delete modal: ' + error.message);
                 });
+        }
+
+        function archiveBook(bookId) {
+            if (confirm('Are you sure you want to archive this book? It will be moved to the archive section.')) {
+                fetch(`/Book/Archive`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `id=${encodeURIComponent(bookId)}`
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to archive book.');
+                    }
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('Error: ' + error.message);
+                });
+            }
         }
 
         document.addEventListener("submit", function (e) {

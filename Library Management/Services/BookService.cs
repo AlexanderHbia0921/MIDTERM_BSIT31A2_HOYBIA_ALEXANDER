@@ -21,7 +21,7 @@ public class BookService
             Name = "George Orwell",
             Biography = "English novelist, essayist, journalist and critic.",
             BirthDate = new DateTime(1903, 6, 25),
-            ProfileImageUrl = "https://example.com/orwell.jpg",
+            ProfileImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/George_Orwell%2C_c._1940_%2841928180381%29.jpg/960px-George_Orwell%2C_c._1940_%2841928180381%29.jpg",
             Books = new List<Book>()
         };
 
@@ -54,7 +54,7 @@ public class BookService
             Name = "J.K. Rowling",
             Biography = "British author, best known for the Harry Potter series.",
             BirthDate = new DateTime(1965, 7, 31),
-            ProfileImageUrl = "https://example.com/rowling.jpg",
+            ProfileImageUrl = "https://upload.wikimedia.org/wikipedia/commons/5/5d/J._K._Rowling_2010.jpg",
             Books = new List<Book>()
         };
 
@@ -90,7 +90,7 @@ public class BookService
                 Name = "Harper Lee",
                 Biography = "American novelist best known for To Kill a Mockingbird.",
                 BirthDate = new DateTime(1926, 4, 28),
-                ProfileImageUrl = "https://example.com/harper.jpg",
+                ProfileImageUrl = "https://upload.wikimedia.org/wikipedia/commons/b/b5/Photo_portrait_of_Harper_Lee_%28To_Kill_a_Mockingbird_dust_jacket%2C_1960%29.jpg",
                 Books = new List<Book>()
             },
             Book = new Book
@@ -111,7 +111,7 @@ public class BookService
                 Name = "J.R.R. Tolkien",
                 Biography = "English writer, poet, philologist, and academic.",
                 BirthDate = new DateTime(1892, 1, 3),
-                ProfileImageUrl = "https://example.com/tolkien.jpg",
+                ProfileImageUrl = "https://Skibidi.com/tolkien.jpg",
                 Books = new List<Book>()
             },
             Book = new Book
@@ -132,7 +132,7 @@ public class BookService
                 Name = "F. Scott Fitzgerald",
                 Biography = "American novelist and short story writer.",
                 BirthDate = new DateTime(1896, 9, 24),
-                ProfileImageUrl = "https://example.com/fitzgerald.jpg",
+                ProfileImageUrl = "https://Skibidi.com/fitzgerald.jpg",
                 Books = new List<Book>()
             },
             Book = new Book
@@ -153,7 +153,7 @@ public class BookService
                 Name = "Suzanne Collins",
                 Biography = "American television writer and author.",
                 BirthDate = new DateTime(1962, 8, 10),
-                ProfileImageUrl = "https://example.com/collins.jpg",
+                ProfileImageUrl = "https://Skibidi.com/collins.jpg",
                 Books = new List<Book>()
             },
             Book = new Book
@@ -174,7 +174,7 @@ public class BookService
                 Name = "Mary Shelley",
                 Biography = "English novelist best known for Frankenstein.",
                 BirthDate = new DateTime(1797, 8, 30),
-                ProfileImageUrl = "https://example.com/shelley.jpg",
+                ProfileImageUrl = "https://Skibidi.com/shelley.jpg",
                 Books = new List<Book>()
             },
             Book = new Book
@@ -260,7 +260,7 @@ public class BookService
 
     public IEnumerable<BookListViewModel> GetBooks()
     {
-        return _books.Select(b => new BookListViewModel
+        return _books.Where(b => !b.IsArchived).Select(b => new BookListViewModel
         {
             BookId = b.Id,
             Title = b.Title,
@@ -428,5 +428,117 @@ public class BookService
         _bookCopies.Add(newCopy);
     }
 
+    // Author management methods
+    public IEnumerable<Author> GetAllAuthors()
+    {
+        return _authors;
+    }
+
+    public void AddAuthor(Author author)
+    {
+        _authors.Add(author);
+    }
+
+    public void UpdateAuthor(EditAuthorViewModel authorViewModel)
+    {
+        var author = _authors.FirstOrDefault(a => a.Id == authorViewModel.Id);
+        if (author != null)
+        {
+            author.Name = authorViewModel.Name;
+            author.Biography = authorViewModel.Biography;
+            author.BirthDate = authorViewModel.BirthDate;
+            author.ProfileImageUrl = authorViewModel.ProfileImageUrl;
+        }
+    }
+
+    public void ArchiveAuthor(Guid id)
+    {
+        var author = _authors.FirstOrDefault(a => a.Id == id);
+        if (author != null)
+        {
+            author.IsArchived = true;
+            // Also archive all books by this author
+            foreach (var book in author.Books)
+            {
+                book.IsArchived = true;
+            }
+        }
+    }
+
+    public void RestoreAuthor(Guid id)
+    {
+        var author = _authors.FirstOrDefault(a => a.Id == id);
+        if (author != null)
+        {
+            author.IsArchived = false;
+        }
+    }
+
+    public void DeleteAuthor(Guid id)
+    {
+        var author = _authors.FirstOrDefault(a => a.Id == id);
+        if (author != null)
+        {
+            _authors.Remove(author);
+        }
+    }
+
+    // Book archiving methods
+    public IEnumerable<BookListViewModel> GetArchivedBooks()
+    {
+        return _books.Where(b => b.IsArchived).Select(b => new BookListViewModel
+        {
+            BookId = b.Id,
+            Title = b.Title,
+            ISBN = b.ISBN,
+            Description = b.Description,
+            Genre = b.Genre,
+            PublishedDate = b.PublishedDate,
+            CoverImageUrl = _bookCopies.FirstOrDefault(bi => bi.Book.Id == b.Id)?.CoverImageUrl,
+            AuthorName = _authors.FirstOrDefault(a => a.Books.Any(bk => bk.Id == b.Id))?.Name,
+            AuthorProfileImageUrl = _authors.FirstOrDefault(a => a.Books.Any(bk => bk.Id == b.Id))?.ProfileImageUrl,
+            TotalCopies = _bookCopies.Count(bi => bi.Book.Id == b.Id),
+            AvailableCopies = _bookCopies.Count(bi => bi.Book.Id == b.Id && bi.PulloutDate == null)
+        });
+    }
+
+    public void ArchiveBook(Guid id)
+    {
+        var book = _books.FirstOrDefault(b => b.Id == id);
+        if (book != null)
+        {
+            book.IsArchived = true;
+        }
+    }
+
+    public void RestoreBook(Guid id)
+    {
+        var book = _books.FirstOrDefault(b => b.Id == id);
+        if (book != null)
+        {
+            book.IsArchived = false;
+        }
+    }
+
+    // Book copy pullout methods
+    public void PulloutBookCopy(Guid copyId, string reason)
+    {
+        var bookCopy = _bookCopies.FirstOrDefault(bc => bc.Id == copyId);
+        if (bookCopy != null)
+        {
+            bookCopy.PulloutDate = DateTime.Now;
+            bookCopy.PulloutReason = reason;
+        }
+    }
+
+    public IEnumerable<BookCopy> GetBookCopiesByBookId(Guid bookId)
+    {
+        return _bookCopies.Where(bc => bc.Book.Id == bookId);
+    }
+
+    public IEnumerable<BookCopy> GetAllBookCopies()
+    {
+        return _bookCopies;
+    }
 
 }

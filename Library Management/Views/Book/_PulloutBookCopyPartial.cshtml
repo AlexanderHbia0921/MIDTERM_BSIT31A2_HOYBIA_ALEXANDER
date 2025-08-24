@@ -1,0 +1,91 @@
+@model Library_Management.Models.PulloutBookCopyViewModel
+
+<form id="pulloutForm" method="post" asp-action="PulloutCopy" asp-controller="Book">
+    <input asp-for="BookCopyId" type="hidden" />
+    
+    <div class="row mb-3">
+        <div class="col-md-4 text-center">
+            @if (!string.IsNullOrEmpty(Model.CoverImageUrl))
+            {
+                <img src="@Model.CoverImageUrl" alt="Book Cover" class="img-fluid rounded" style="max-height: 150px; object-fit: cover;">
+            }
+            else
+            {
+                <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 150px;">
+                    <i class="bi bi-book fs-1 text-muted"></i>
+                </div>
+            }
+        </div>
+        <div class="col-md-8">
+            <h5 class="mb-2">@Model.BookTitle</h5>
+            <p class="mb-1"><strong>Condition:</strong> @Model.Condition</p>
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                <strong>Warning:</strong> This action will remove this book copy from circulation. Only proceed if the book is damaged, lost, or needs to be retired.
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="PulloutReason" class="form-label">Pullout Reason *</label>
+        <select asp-for="PulloutReason" class="form-control" required>
+            <option value="">Select a reason...</option>
+            <option value="Damaged">Damaged - book is physically damaged</option>
+            <option value="Lost">Lost - book cannot be located</option>
+            <option value="Outdated">Outdated - information is no longer current</option>
+            <option value="Replacement">Replacement - being replaced with new edition</option>
+            <option value="Withdrawn">Withdrawn - removed from collection</option>
+            <option value="Other">Other - specify in notes below</option>
+        </select>
+        <span asp-validation-for="PulloutReason" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label for="pulloutNotes" class="form-label">Additional Notes (Optional)</label>
+        <textarea id="pulloutNotes" name="pulloutNotes" class="form-control" rows="3" placeholder="Any additional details about the pullout reason..."></textarea>
+    </div>
+
+    <div class="modal-footer px-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-warning">
+            <i class="bi bi-box-arrow-down"></i> Pull Out Copy
+        </button>
+    </div>
+</form>
+
+<script>
+    $(document).ready(function() {
+        $('#pulloutForm').submit(function(e) {
+            e.preventDefault();
+            
+            // Combine reason with notes if needed
+            var reason = $('#PulloutReason').val();
+            var notes = $('#pulloutNotes').val();
+            if (notes && $('#PulloutReason').val() === 'Other') {
+                reason = 'Other: ' + notes;
+            } else if (notes) {
+                reason += ' - ' + notes;
+            }
+            
+            // Update the hidden field
+            var formData = $(this).serialize();
+            formData += '&PulloutReason=' + encodeURIComponent(reason);
+            
+            if (confirm('Are you sure you want to pull out this book copy? This action cannot be undone.')) {
+                $.post($(this).attr('action'), formData)
+                    .done(function() {
+                        $('#pulloutModal').modal('hide');
+                        location.reload();
+                    })
+                    .fail(function(xhr) {
+                        if (xhr.status === 400) {
+                            // Validation errors
+                            alert('Please check your input and try again.');
+                        } else {
+                            alert('Error pulling out book copy. Please try again.');
+                        }
+                    });
+            }
+        });
+    });
+</script>

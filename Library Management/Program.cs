@@ -3,6 +3,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// Register services (using singleton pattern as implemented)
+builder.Services.AddSingleton<BookService>(_ => BookService.Instance);
+builder.Services.AddSingleton<Library_Management.Services.AuthorService>(_ => Library_Management.Services.AuthorService.Instance);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
